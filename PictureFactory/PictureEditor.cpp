@@ -9,6 +9,7 @@ PictureEditor::PictureEditor(QWidget* parent)
 	ui.setupUi(this);
 	setAttribute(Qt::WA_QuitOnClose, false);
 	connect(ui.pushButton_load, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonLoadClick);
+	connect(ui.pushButton_original, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonOrigClick);
 	connect(ui.pushButton_erosion, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonEronClick);
 	connect(ui.pushButton_blur, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBlurClick);
 	connect(ui.pushButton_edge, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonEdgeClick);
@@ -23,27 +24,27 @@ void PictureEditor::SlotPushButtonLoadClick()
 	QString filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp)"));
 	if (filename.isEmpty())
 		return;
-	QPixmap p(filename);
-	ui.label_pic->setPixmap(p.scaled(ui.label_pic->width(), ui.label_pic->height()));
 	srcImage = cv::imread(filename.toStdString());
+	showImage(srcImage);
 	qDebug() << filename;
+}
+
+void PictureEditor::SlotPushButtonOrigClick()
+{
+	showImage(srcImage);
 }
 
 void PictureEditor::SlotPushButtonEronClick()
 {
 	cv::Mat element = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(15, 15));
 	erode(srcImage, dstImage, element);
-	auto qimage = cvMat2QImage(dstImage);
-	auto pix = QPixmap::fromImage(qimage);
-	ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+	showImage(dstImage);
 }
 
 void PictureEditor::SlotPushButtonBlurClick()
 {
 	cv::blur(srcImage, dstImage, cv::Size(7, 7));
-	auto qimage = cvMat2QImage(dstImage);
-	auto pix = QPixmap::fromImage(qimage);
-	ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+	showImage(dstImage);
 }
 
 void PictureEditor::SlotPushButtonEdgeClick()
@@ -53,9 +54,8 @@ void PictureEditor::SlotPushButtonEdgeClick()
 	cv::cvtColor(srcImage, grayImage, cv::COLOR_BGR2GRAY);
 	cv::blur(grayImage, dstImage, cv::Size(3, 3));
 	cv::Canny(dstImage, dstImage, 3, 9, 3);
-	auto qimage = cvMat2QImage(dstImage);
-	auto pix = QPixmap::fromImage(qimage);
-	ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+
+	showImage(dstImage);
 }
 
 QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
@@ -104,5 +104,37 @@ QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
 	{
 		qDebug() << "ERROR: Mat could not be converted to QImage.";
 		return QImage();
+	}
+}
+
+void PictureEditor::showImage(const cv::Mat& mat)
+{
+	auto qimage = cvMat2QImage(mat);
+	auto pix = QPixmap::fromImage(qimage);
+	if (pix.width() <= ui.widget->width() && pix.height() <= ui.widget->height())
+	{
+		ui.label_pic->resize(pix.width(), pix.height());
+		ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+	}
+	else
+	{
+		if (pix.width() <= ui.widget->width())
+		{
+			ui.label_pic->resize(static_cast<int>(static_cast<double>(pix.width()) * ui.widget->height() / pix.height()), pix.height());
+			ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+		}
+		else if (pix.height() <= ui.widget->height())
+		{
+			ui.label_pic->resize(pix.width(), static_cast<int>(static_cast<double>(pix.height()) * ui.widget->width() / pix.width()));
+			ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+		}
+		else
+		{
+			double ratio_w = static_cast<double>(ui.widget->width()) / pix.width();
+			double ratio_h = static_cast<double>(ui.widget->height()) / pix.height();
+			double ratio_min = ratio_w < ratio_h ? ratio_w : ratio_h;
+			ui.label_pic->resize(static_cast<int>(ratio_min * pix.width()), static_cast<int>(ratio_min * pix.height()));
+			ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
+		}
 	}
 }

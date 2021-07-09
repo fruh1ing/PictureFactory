@@ -13,9 +13,11 @@ public:
 	~PictureEditor();
 
 	QImage cvMat2QImage(const cv::Mat& mat);
+	void showImage(const cv::Mat& mat);
 
 private slots:
 	void SlotPushButtonLoadClick();
+	void SlotPushButtonOrigClick();
 	void SlotPushButtonEronClick();
 	void SlotPushButtonBlurClick();
 	void SlotPushButtonEdgeClick();

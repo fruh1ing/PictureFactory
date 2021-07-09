@@ -100,10 +100,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <QtRcc Include="PictureFactory.qrc" />
+    <QtUic Include="PictureEditor.ui" />
     <QtUic Include="PictureFactory.ui" />
     <QtMoc Include="PictureFactory.h" />
+    <ClCompile Include="PictureEditor.cpp" />
     <ClCompile Include="PictureFactory.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="PictureEditor.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
