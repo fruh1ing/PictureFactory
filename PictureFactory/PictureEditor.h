@@ -4,6 +4,8 @@
 #include "ui_PictureEditor.h"
 #include<opencv2/opencv.hpp>
 
+using cv::Mat;
+
 class PictureEditor : public QWidget
 {
 	Q_OBJECT
@@ -21,9 +23,16 @@ private slots:
 	void SlotPushButtonEronClick();
 	void SlotPushButtonBlurClick();
 	void SlotPushButtonEdgeClick();
+	void SlotPushButtonChanRClick();
+	void SlotPushButtonWeightMixClick();
+	void SlotPushButtonDftClick();
+	void SlotPushButtonBoxClick();
+	void SlotPushButtonMeanClick();
+	void SlotPushButtonGaussClick();
 
 private:
 	Ui::PictureEditor ui;
 	cv::Mat srcImage;
 	cv::Mat dstImage;
+	QString filename;
 };

@@ -3,6 +3,7 @@
 #include <QtWidgets/QMainWindow>
 #include "ui_PictureFactory.h"
 #include "PictureEditor.h"
+#include "PicturesMix.h"
 
 class PictureFactory : public QMainWindow
 {
@@ -14,8 +15,10 @@ public:
 
 private slots:
 	void SlotPushButtonEditorClick();
+	void SlotPushButtonMixClick();
 
 private:
 	Ui::PictureFactoryClass ui;
 	PictureEditor* pEditor;
+	PicturesMix* pMix;
 };

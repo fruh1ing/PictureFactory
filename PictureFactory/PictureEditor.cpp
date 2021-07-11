@@ -2,6 +2,8 @@
 #include <QFileDialog>
 #include <QDebug>
 #include<opencv2/imgproc/imgproc.hpp>
+#include <vector>
+#include "Processing.h"
 
 PictureEditor::PictureEditor(QWidget* parent)
 	: QWidget(parent)
@@ -13,6 +15,12 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_erosion, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonEronClick);
 	connect(ui.pushButton_blur, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBlurClick);
 	connect(ui.pushButton_edge, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonEdgeClick);
+	connect(ui.pushButton_chanR, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonChanRClick);
+	connect(ui.pushButton_dft, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonDftClick);
+	connect(ui.pushButton_box, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBoxClick);
+	connect(ui.pushButton_mean, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonMeanClick);
+	connect(ui.pushButton_gauss, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonGaussClick);
+
 }
 
 PictureEditor::~PictureEditor()
@@ -21,7 +29,7 @@ PictureEditor::~PictureEditor()
 
 void PictureEditor::SlotPushButtonLoadClick()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp)"));
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp)"));
 	if (filename.isEmpty())
 		return;
 	srcImage = cv::imread(filename.toStdString());
@@ -55,6 +63,43 @@ void PictureEditor::SlotPushButtonEdgeClick()
 	cv::blur(grayImage, dstImage, cv::Size(3, 3));
 	cv::Canny(dstImage, dstImage, 3, 9, 3);
 
+	showImage(dstImage);
+}
+
+void PictureEditor::SlotPushButtonChanRClick()
+{
+	std::vector<Mat> channels;
+	cv::split(srcImage, channels);
+	dstImage = channels[0];
+	showImage(dstImage);
+}
+
+void PictureEditor::SlotPushButtonWeightMixClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonDftClick()
+{
+	Mat dstImg = dft_procssing(filename.toStdString());
+	showImage(dstImg);
+}
+
+void PictureEditor::SlotPushButtonBoxClick()
+{
+	boxFilter(srcImage, dstImage, -1, Size(5, 5));
+	showImage(dstImage);
+}
+
+void PictureEditor::SlotPushButtonMeanClick()
+{
+	blur(srcImage, dstImage, Size(7, 7));
+	showImage(dstImage);
+}
+
+void PictureEditor::SlotPushButtonGaussClick()
+{
+	GaussianBlur(srcImage, dstImage, Size(3, 3), 0, 0);
 	showImage(dstImage);
 }
 

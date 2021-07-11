@@ -66,11 +66,17 @@
     <Link>
       <AdditionalDependencies>opencv_world451d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\customwidgets;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
       <AdditionalDependencies>opencv_world451d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\customwidgets;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -99,16 +105,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="PicturesMix.cpp" />
+    <ClCompile Include="Processing.cpp" />
     <QtRcc Include="PictureFactory.qrc" />
     <QtUic Include="PictureEditor.ui" />
     <QtUic Include="PictureFactory.ui" />
     <QtMoc Include="PictureFactory.h" />
+    <ClCompile Include="customwidgets\QImageWidget.cpp" />
     <ClCompile Include="PictureEditor.cpp" />
     <ClCompile Include="PictureFactory.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="PicturesMix.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PictureEditor.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="customwidgets\QImageWidget.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="PicturesMix.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Processing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
