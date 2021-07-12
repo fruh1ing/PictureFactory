@@ -20,6 +20,13 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_box, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBoxClick);
 	connect(ui.pushButton_mean, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonMeanClick);
 	connect(ui.pushButton_gauss, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonGaussClick);
+	connect(ui.pushButton_sobel, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSobelClick);
+	connect(ui.pushButton_laplacian, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonLapLacianClick);
+	connect(ui.pushButton_scharr, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonScharrClick);
+	connect(ui.pushButton_houghlines, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHougnLinesClick);
+	connect(ui.pushButton_remap, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonRemapClick);
+	connect(ui.pushButton_warp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonWarpClick);
+	connect(ui.pushButton_hist, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistClick);
 
 }
 
@@ -101,6 +108,55 @@ void PictureEditor::SlotPushButtonGaussClick()
 {
 	GaussianBlur(srcImage, dstImage, Size(3, 3), 0, 0);
 	showImage(dstImage);
+}
+
+void PictureEditor::SlotPushButtonSobelClick()
+{
+	Mat grad_x, grad_y;
+	Mat abs_grad_x, abs_grad_y, dst;
+	// 求X方向梯度
+	Sobel(srcImage, grad_x, CV_16S, 1, 0, 3, 1, 1, BORDER_DEFAULT);
+	convertScaleAbs(grad_x, abs_grad_x);
+	Sobel(srcImage, grad_y, CV_16S, 1, 0, 3, 1, 1, BORDER_DEFAULT);
+	convertScaleAbs(grad_y, abs_grad_y);
+	addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, dst);
+	showImage(dst);
+}
+
+void PictureEditor::SlotPushButtonLapLacianClick()
+{
+	Mat src, src_gray, dst, abs_dst;
+	src = srcImage.clone();
+	GaussianBlur(src, src, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	cvtColor(src, src_gray, COLOR_BGR2GRAY);
+	Laplacian(src_gray, dst, CV_16S, 3, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(dst, abs_dst);
+	showImage(abs_dst);
+}
+
+void PictureEditor::SlotPushButtonScharrClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonHougnLinesClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonRemapClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonWarpClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonHistClick()
+{
+
 }
 
 QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)

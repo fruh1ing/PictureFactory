@@ -1,7 +1,7 @@
 #include "Processing.h"
 
 
-Mat dft_procssing(std::string& imgpath)
+cv::Mat dft_procssing(std::string& imgpath)
 {
 	// 将输入图像延扩到最佳的尺寸，边界用0补充
 	Mat srcImg = imread(imgpath, 0);

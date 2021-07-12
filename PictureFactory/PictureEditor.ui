@@ -122,6 +122,55 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton_sobel">
+       <property name="text">
+        <string>sobel</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_laplacian">
+       <property name="text">
+        <string>Laplacian</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_scharr">
+       <property name="text">
+        <string>Scharr</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_houghlines">
+       <property name="text">
+        <string>HoughLines</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_remap">
+       <property name="text">
+        <string>Remap</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_warp">
+       <property name="text">
+        <string>仿射变换</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_hist">
+       <property name="text">
+        <string>EqualizeHist</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>

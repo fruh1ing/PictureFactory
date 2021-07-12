@@ -29,6 +29,14 @@ private slots:
 	void SlotPushButtonBoxClick();
 	void SlotPushButtonMeanClick();
 	void SlotPushButtonGaussClick();
+	void SlotPushButtonSobelClick();
+	void SlotPushButtonLapLacianClick();
+	void SlotPushButtonScharrClick();
+	void SlotPushButtonHougnLinesClick();
+	void SlotPushButtonRemapClick();
+	void SlotPushButtonWarpClick();
+	void SlotPushButtonHistClick();
+
 
 private:
 	Ui::PictureEditor ui;

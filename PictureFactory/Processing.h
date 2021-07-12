@@ -3,4 +3,4 @@
 #include <string>
 using namespace cv;
 
-Mat dft_procssing(std::string& imgpath);
+cv::Mat dft_procssing(std::string& imgpath);
