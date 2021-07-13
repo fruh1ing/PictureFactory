@@ -36,6 +36,12 @@ void QImageWidget::paintEvent(QPaintEvent* event)
 	painter.drawPixmap(0, 0, newpix.width(), newpix.height(), newpix);
 }
 
+void QImageWidget::closeEvent(QCloseEvent* event)
+{
+	QWidget::closeEvent(event);
+	emit closed();
+}
+
 QImage QImageWidget::cvMat2QImage(const cv::Mat& mat)
 {
 	// 8-bits unsigned, NO. OF CHANNELS = 1

@@ -52,6 +52,9 @@
     <ClCompile Include="Processing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PictureInpaint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="PictureEditor.h">
@@ -63,12 +66,18 @@
     <QtMoc Include="PicturesMix.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="PictureInpaint.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="PictureEditor.ui">
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="PicturesMix.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="PictureInpaint.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>

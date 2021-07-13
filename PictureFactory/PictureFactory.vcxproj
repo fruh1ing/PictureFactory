@@ -55,11 +55,11 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>D:\opencv\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\opencv\build\include;D:\repositories\PictureFactory\PictureFactory\PictureFactory\customwidgets;$(IncludePath)</IncludePath>
     <LibraryPath>D:\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>D:\opencv\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>D:\opencv\build\include;D:\repositories\PictureFactory\PictureFactory\PictureFactory\customwidgets;$(IncludePath)</IncludePath>
     <LibraryPath>D:\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -105,6 +105,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="PictureInpaint.cpp" />
     <ClCompile Include="PicturesMix.cpp" />
     <ClCompile Include="Processing.cpp" />
     <QtRcc Include="PictureFactory.qrc" />
@@ -115,6 +116,7 @@
     <ClCompile Include="PictureEditor.cpp" />
     <ClCompile Include="PictureFactory.cpp" />
     <ClCompile Include="main.cpp" />
+    <QtUic Include="PictureInpaint.ui" />
     <QtUic Include="PicturesMix.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +129,7 @@
     <QtMoc Include="PicturesMix.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="PictureInpaint.h" />
     <ClInclude Include="Processing.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

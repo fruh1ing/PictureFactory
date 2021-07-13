@@ -5,7 +5,7 @@
 #include<opencv2/opencv.hpp>
 
 using cv::Mat;
-
+class QImageWidget;
 class PictureEditor : public QWidget
 {
 	Q_OBJECT
@@ -36,11 +36,15 @@ private slots:
 	void SlotPushButtonRemapClick();
 	void SlotPushButtonWarpClick();
 	void SlotPushButtonHistClick();
-
+	void SlotPushButtonContourClick(bool);
+	void SlotSpinBox(int);
 
 private:
 	Ui::PictureEditor ui;
 	cv::Mat srcImage;
 	cv::Mat dstImage;
 	QString filename;
+
+	QImageWidget* grayImgWgt;
+	QImageWidget* contourWgt;
 };

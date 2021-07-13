@@ -4,6 +4,7 @@
 #include "ui_PictureFactory.h"
 #include "PictureEditor.h"
 #include "PicturesMix.h"
+#include "PictureInpaint.h"
 
 class PictureFactory : public QMainWindow
 {
@@ -21,4 +22,5 @@ private:
 	Ui::PictureFactoryClass ui;
 	PictureEditor* pEditor;
 	PicturesMix* pMix;
+	PictureInpaint* pInpaint;
 };

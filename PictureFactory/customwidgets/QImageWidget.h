@@ -9,13 +9,16 @@ class QImageWidget : public QWidget
 	Q_OBJECT
 
 public:
-	QImageWidget(QWidget* parent);
+	QImageWidget(QWidget* parent = nullptr);
 	~QImageWidget();
 	void setPixmap(QPixmap& p);
 	void setPixmap(QImage& img);
 	void setPixmap(cv::Mat& mat);
+signals:
+	void closed();
 protected:
-	void paintEvent(QPaintEvent* event);
+	virtual void paintEvent(QPaintEvent* event);
+	virtual void closeEvent(QCloseEvent* event);
 	QImage cvMat2QImage(const cv::Mat& mat);
 
 private:

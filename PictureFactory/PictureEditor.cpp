@@ -4,9 +4,12 @@
 #include<opencv2/imgproc/imgproc.hpp>
 #include <vector>
 #include "Processing.h"
+#include "QImageWidget.h"
 
 PictureEditor::PictureEditor(QWidget* parent)
 	: QWidget(parent)
+	, grayImgWgt(nullptr)
+	, contourWgt(nullptr)
 {
 	ui.setupUi(this);
 	setAttribute(Qt::WA_QuitOnClose, false);
@@ -27,7 +30,8 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_remap, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonRemapClick);
 	connect(ui.pushButton_warp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonWarpClick);
 	connect(ui.pushButton_hist, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistClick);
-
+	connect(ui.pushButton_contour, &QPushButton::toggled, this, &PictureEditor::SlotPushButtonContourClick);
+	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
 
 PictureEditor::~PictureEditor()
@@ -136,12 +140,63 @@ void PictureEditor::SlotPushButtonLapLacianClick()
 
 void PictureEditor::SlotPushButtonScharrClick()
 {
+	Mat grad_x, grad_y;
+	Mat abs_grad_x, abs_grad_y, dst;
+	// 求X方向梯度
+	Scharr(srcImage, grad_x, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(grad_x, abs_grad_x);
 
+	QImageWidget* imageWidget = new QImageWidget;
+	imageWidget->resize(500, 500);
+	imageWidget->setPixmap(abs_grad_x);
+	imageWidget->show();
+	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
+
+	// 求Y方向梯度
+	Scharr(srcImage, grad_y, CV_16S, 1, 0, 1, 0, BORDER_DEFAULT);
+	convertScaleAbs(grad_y, abs_grad_y);
+
+	QImageWidget* imageWidget2 = new QImageWidget;
+	imageWidget2->resize(500, 500);
+	imageWidget2->setPixmap(abs_grad_y);
+	imageWidget2->show();
+	connect(imageWidget2, &QImageWidget::closed, imageWidget2, &QImageWidget::deleteLater);
+
+	//合并梯度
+	addWeighted(abs_grad_x, 0.5, abs_grad_y, 0.5, 0, dst);
+	showImage(dst);
 }
 
 void PictureEditor::SlotPushButtonHougnLinesClick()
 {
+	Mat midImage;
+	// 边缘检测和转化为灰度图
+	Canny(srcImage, midImage, 50, 200, 3);
+	cvtColor(midImage, dstImage, COLOR_GRAY2BGR);
+	// 进行霍夫线变换
+	std::vector<Vec2f> lines;
+	HoughLines(midImage, lines, 1, CV_PI / 180, 150, 0, 0);
+	for (size_t i = 0; i < lines.size(); ++i)
+	{
+		float rho = lines[i][0], theta = lines[i][1];
+		Point pt1, pt2;
+		double a = cos(theta), b = sin(theta);
+		double x0 = a * rho, y0 = b * rho;
+		pt1.x = cvRound(x0 + 1000 * (-b));
+		pt1.y = cvRound(y0 + 1000 * (a));
+		pt2.x = cvRound(x0 - 1000 * (-b));
+		pt2.y = cvRound(y0 - 1000 * (a));
+		line(dstImage, pt1, pt2, Scalar(55, 100, 195), 1, LINE_AA);
+	}
 
+	QImageWidget* imageWidget = new QImageWidget;
+	imageWidget->resize(500, 500);
+	imageWidget->setPixmap(midImage);
+	imageWidget->show();
+	imageWidget->setWindowTitle("midImage");
+	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
+
+	showImage(dstImage);
 }
 
 void PictureEditor::SlotPushButtonRemapClick()
@@ -156,7 +211,60 @@ void PictureEditor::SlotPushButtonWarpClick()
 
 void PictureEditor::SlotPushButtonHistClick()
 {
+	cvtColor(srcImage, dstImage, COLOR_BGR2GRAY);
+	equalizeHist(dstImage, dstImage);
+	showImage(dstImage);
+}
 
+void PictureEditor::SlotPushButtonContourClick(bool checked)
+{
+	if (checked)
+		ui.spinBox->blockSignals(false);
+	else
+		ui.spinBox->blockSignals(true);
+	ui.spinBox->setValue(20);
+}
+
+void PictureEditor::SlotSpinBox(int nThresh)
+{
+	if (srcImage.empty())
+		return;
+	Mat grayImage;
+	int nThresh_max = 255;
+	RNG rng(12345);
+	Mat cannyMat_output;
+	std::vector<std::vector<Point>> vContours;
+	std::vector<Vec4i> vHierarchy;
+	// 转成灰度并模糊化降噪
+	cvtColor(srcImage, grayImage, COLOR_BGR2GRAY);
+	blur(grayImage, grayImage, Size(3, 3));
+
+	//if (grayImgWgt == nullptr)
+	//	grayImgWgt = new QImageWidget;
+	//grayImgWgt->resize(ui.label_pic->size());
+	//grayImgWgt->setPixmap(grayImage);
+	//grayImgWgt->show();
+	//grayImgWgt->setWindowTitle("midImage");
+
+	// 用Canny算子检测边缘
+	Canny(grayImage, cannyMat_output, nThresh, static_cast<long long>(nThresh) * 2, 3);
+	// 寻找轮廓
+	findContours(cannyMat_output, vContours, vHierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	// 绘出轮廓
+	Mat drawing = Mat::zeros(cannyMat_output.size(), CV_8UC3);
+	for (int i = 0; i < vContours.size(); ++i)
+	{
+		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+		drawContours(drawing, vContours, i, color, 2, 8, vHierarchy, 0, Point());
+	}
+
+	//if (contourWgt == nullptr)
+	//	contourWgt = new QImageWidget;
+	//contourWgt->resize(ui.label_pic->size());
+	//contourWgt->setPixmap(drawing);
+	//contourWgt->show();
+	//contourWgt->setWindowTitle("midImage");
+	showImage(drawing);
 }
 
 QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
@@ -164,7 +272,6 @@ QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
 	// 8-bits unsigned, NO. OF CHANNELS = 1
 	if (mat.type() == CV_8UC1)
 	{
-		qDebug() << "CV_8UC1";
 		QImage image(mat.cols, mat.rows, QImage::Format_Indexed8);
 		// Set the color table (used to translate colour indexes to qRgb values)
 		image.setColorCount(256);
@@ -185,7 +292,6 @@ QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
 	// 8-bits unsigned, NO. OF CHANNELS = 3
 	else if (mat.type() == CV_8UC3)
 	{
-		qDebug() << "CV_8UC3";
 		// Copy input Mat
 		const uchar* pSrc = (const uchar*)mat.data;
 		// Create QImage with same dimensions as input Mat
@@ -194,7 +300,6 @@ QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
 	}
 	else if (mat.type() == CV_8UC4)
 	{
-		qDebug() << "CV_8UC4";
 		// Copy input Mat
 		const uchar* pSrc = (const uchar*)mat.data;
 		// Create QImage with same dimensions as input Mat
@@ -203,7 +308,6 @@ QImage PictureEditor::cvMat2QImage(const cv::Mat& mat)
 	}
 	else
 	{
-		qDebug() << "ERROR: Mat could not be converted to QImage.";
 		return QImage();
 	}
 }

@@ -28,12 +28,12 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>81</width>
+       <width>71</width>
        <height>31</height>
       </rect>
      </property>
      <property name="text">
-      <string>窗口1</string>
+      <string>Editor</string>
      </property>
     </widget>
     <widget class="QPushButton" name="pushButton_muti">
@@ -46,7 +46,20 @@
       </rect>
      </property>
      <property name="text">
-      <string>窗口2</string>
+      <string>MIX</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_muti_2">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>10</y>
+       <width>75</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Inpaint</string>
      </property>
     </widget>
    </widget>
