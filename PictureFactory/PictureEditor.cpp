@@ -31,6 +31,7 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_warp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonWarpClick);
 	connect(ui.pushButton_hist, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistClick);
 	connect(ui.pushButton_contour, &QPushButton::toggled, this, &PictureEditor::SlotPushButtonContourClick);
+	connect(ui.pushButton_bp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBPClick);
 	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
 
@@ -223,6 +224,11 @@ void PictureEditor::SlotPushButtonContourClick(bool checked)
 	else
 		ui.spinBox->blockSignals(true);
 	ui.spinBox->setValue(20);
+}
+
+void PictureEditor::SlotPushButtonBPClick()
+{
+
 }
 
 void PictureEditor::SlotSpinBox(int nThresh)

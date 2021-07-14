@@ -37,7 +37,9 @@ private slots:
 	void SlotPushButtonWarpClick();
 	void SlotPushButtonHistClick();
 	void SlotPushButtonContourClick(bool);
+	void SlotPushButtonBPClick();
 	void SlotSpinBox(int);
+
 
 private:
 	Ui::PictureEditor ui;
