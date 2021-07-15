@@ -31,6 +31,7 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_warp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonWarpClick);
 	connect(ui.pushButton_hist, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistClick);
 	connect(ui.pushButton_contour, &QPushButton::toggled, this, &PictureEditor::SlotPushButtonContourClick);
+	connect(ui.pushButton_hs, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHSClick);
 	connect(ui.pushButton_bp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBPClick);
 	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
@@ -202,12 +203,72 @@ void PictureEditor::SlotPushButtonHougnLinesClick()
 
 void PictureEditor::SlotPushButtonRemapClick()
 {
+	Mat map_x, map_y;
+	dstImage.create(srcImage.size(), srcImage.type());
+	map_x.create(srcImage.size(), CV_32FC1);
+	map_y.create(srcImage.size(), CV_32FC1);
 
+	// 双层循环，遍历每一个像素点，改变map_x & map_y的值
+	for (int j = 0; j < srcImage.rows; j++)
+	{
+		for (int i = 0; i < srcImage.cols; i++)
+		{
+			//改变map_x & map_y的值. 
+			map_x.at<float>(j, i) = static_cast<float>(i);
+			map_y.at<float>(j, i) = static_cast<float>(srcImage.rows - j);
+		}
+	}
+
+	//进行重映射操作
+	remap(srcImage, dstImage, map_x, map_y, INTER_LINEAR, BORDER_CONSTANT, Scalar(0, 0, 0));
+	showImage(dstImage);
 }
 
 void PictureEditor::SlotPushButtonWarpClick()
 {
+	Point2f srcTriangle[3];
+	Point2f dstTriangle[3];
+	//定义一些Mat变量
+	Mat rotMat(2, 3, CV_32FC1);
+	Mat warpMat(2, 3, CV_32FC1);
+	Mat dstImage_warp, dstImage_warp_rotate;
 
+	// 设置目标图像的大小和类型与源图像一致
+	dstImage_warp = Mat::zeros(srcImage.rows, srcImage.cols, srcImage.type());
+
+	//设置源图像和目标图像上的三组点以计算仿射变换
+	srcTriangle[0] = Point2f(0, 0);
+	srcTriangle[1] = Point2f(static_cast<float>(srcImage.cols - 1), 0);
+	srcTriangle[2] = Point2f(0, static_cast<float>(srcImage.rows - 1));
+
+	dstTriangle[0] = Point2f(static_cast<float>(srcImage.cols * 0.0), static_cast<float>(srcImage.rows * 0.33));
+	dstTriangle[1] = Point2f(static_cast<float>(srcImage.cols * 0.65), static_cast<float>(srcImage.rows * 0.35));
+	dstTriangle[2] = Point2f(static_cast<float>(srcImage.cols * 0.15), static_cast<float>(srcImage.rows * 0.6));
+
+	//【4】求得仿射变换
+	warpMat = getAffineTransform(srcTriangle, dstTriangle);
+
+	//【5】对源图像应用刚刚求得的仿射变换
+	warpAffine(srcImage, dstImage_warp, warpMat, dstImage_warp.size());
+
+	//【6】对图像进行缩放后再旋转
+	// 计算绕图像中点顺时针旋转50度缩放因子为0.6的旋转矩阵
+	Point center = Point(dstImage_warp.cols / 2, dstImage_warp.rows / 2);
+	double angle = -50.0;
+	double scale = 0.6;
+	// 通过上面的旋转细节信息求得旋转矩阵
+	rotMat = getRotationMatrix2D(center, angle, scale);
+	// 旋转已缩放后的图像
+	warpAffine(dstImage_warp, dstImage_warp_rotate, rotMat, dstImage_warp.size());
+
+	showImage(dstImage_warp);
+
+	QImageWidget* imageWidget = new QImageWidget;
+	imageWidget->resize(500, 500);
+	imageWidget->setPixmap(dstImage_warp_rotate);
+	imageWidget->show();
+	imageWidget->setWindowTitle("dstImage");
+	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
 }
 
 void PictureEditor::SlotPushButtonHistClick()
@@ -224,6 +285,59 @@ void PictureEditor::SlotPushButtonContourClick(bool checked)
 	else
 		ui.spinBox->blockSignals(true);
 	ui.spinBox->setValue(20);
+}
+
+void PictureEditor::SlotPushButtonHSClick()
+{
+	Mat hsvImage;
+	cvtColor(srcImage, hsvImage, COLOR_BGR2HSV);
+
+	//将色调量化为30个等级，将饱和度量化为32个等级
+	int hueBinNum = 30;//色调的直方图直条数量
+	int saturationBinNum = 32;//饱和度的直方图直条数量
+	int histSize[] = { hueBinNum, saturationBinNum };
+	// 定义色调的变化范围为0到179
+	float hueRanges[] = { 0, 180 };
+	//定义饱和度的变化范围为0（黑、白、灰）到255（纯光谱颜色）
+	float saturationRanges[] = { 0, 256 };
+	const float* ranges[] = { hueRanges, saturationRanges };
+	MatND dstHist;
+	//参数准备，calcHist函数中将计算第0通道和第1通道的直方图
+	int channels[] = { 0, 1 };
+
+	//【3】正式调用calcHist，进行直方图计算
+	calcHist(&hsvImage,//输入的数组
+		1, //数组个数为1
+		channels,//通道索引
+		Mat(), //不使用掩膜
+		dstHist, //输出的目标直方图
+		2, //需要计算的直方图的维度为2
+		histSize, //存放每个维度的直方图尺寸的数组
+		ranges,//每一维数值的取值范围数组
+		true, // 指示直方图是否均匀的标识符，true表示均匀的直方图
+		false);//累计标识符，false表示直方图在配置阶段会被清零
+
+	//【4】为绘制直方图准备参数
+	double maxValue = 0;//最大值
+	minMaxLoc(dstHist, 0, &maxValue, 0, 0);//查找数组和子数组的全局最小值和最大值存入maxValue中
+	int scale = 10;
+	Mat histImg = Mat::zeros(saturationBinNum * scale, hueBinNum * 10, CV_8UC3);
+
+	//【5】双层循环，进行直方图绘制
+	for (int hue = 0; hue < hueBinNum; hue++)
+	{
+		for (int saturation = 0; saturation < saturationBinNum; saturation++)
+		{
+			float binValue = dstHist.at<float>(hue, saturation);//直方图组距的值
+			int intensity = cvRound(binValue * 255 / maxValue);//强度
+
+			//正式进行绘制
+			rectangle(histImg, Point(hue * scale, saturation * scale),
+				Point((hue + 1) * scale - 1, (saturation + 1) * scale - 1),
+				Scalar::all(intensity), FILLED);
+		}
+	}
+	showImage(histImg);
 }
 
 void PictureEditor::SlotPushButtonBPClick()

@@ -38,7 +38,7 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_2">
      <item>
-      <widget class="QPushButton" name="pushButton_2">
+      <widget class="QPushButton" name="pushButton_hs">
        <property name="text">
         <string>直方图</string>
        </property>
