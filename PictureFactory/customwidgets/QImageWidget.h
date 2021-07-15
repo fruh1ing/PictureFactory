@@ -11,9 +11,9 @@ class QImageWidget : public QWidget
 public:
 	QImageWidget(QWidget* parent = nullptr);
 	~QImageWidget();
-	void setPixmap(QPixmap& p);
-	void setPixmap(QImage& img);
-	void setPixmap(cv::Mat& mat);
+	void setPixmap(const QPixmap& p);
+	void setPixmap(const QImage& img);
+	void setPixmap(const cv::Mat& mat);
 signals:
 	void closed();
 protected:

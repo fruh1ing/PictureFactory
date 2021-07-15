@@ -12,17 +12,17 @@ QImageWidget::~QImageWidget()
 {
 }
 
-void QImageWidget::setPixmap(QPixmap& p)
+void QImageWidget::setPixmap(const QPixmap& p)
 {
 	pix = p;
 }
 
-void QImageWidget::setPixmap(QImage& img)
+void QImageWidget::setPixmap(const QImage& img)
 {
 	pix = QPixmap::fromImage(img);
 }
 
-void QImageWidget::setPixmap(cv::Mat& mat)
+void QImageWidget::setPixmap(const cv::Mat& mat)
 {
 	auto img = cvMat2QImage(mat);
 	pix = QPixmap::fromImage(img);

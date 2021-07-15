@@ -15,6 +15,7 @@ public:
 	~PictureInpaint();
 
 	friend QImage cvMat2QImage(const cv::Mat& mat);
+	void showImage(const Mat& mat, int index);
 private slots:
 	void SlotPushButtonLoadClick();
 
