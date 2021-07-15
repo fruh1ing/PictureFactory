@@ -38,7 +38,10 @@ private slots:
 	void SlotPushButtonHistClick();
 	void SlotPushButtonContourClick(bool);
 	void SlotPushButtonHSClick();
+	void SlotPushButtonHistogramClick();
+	void SlotPushButtonHistogram2Click();
 	void SlotPushButtonBPClick();
+	void SlotPushButtonMatchTemplateClick();
 	void SlotSpinBox(int);
 
 

@@ -45,9 +45,30 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton_histogram">
+       <property name="text">
+        <string>一维直方图</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_histogram2">
+       <property name="text">
+        <string>RGB直方图</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButton_bp">
        <property name="text">
         <string>反向投影</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_matchTemplate">
+       <property name="text">
+        <string>模板匹配</string>
        </property>
       </widget>
      </item>

@@ -32,7 +32,11 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_hist, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistClick);
 	connect(ui.pushButton_contour, &QPushButton::toggled, this, &PictureEditor::SlotPushButtonContourClick);
 	connect(ui.pushButton_hs, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHSClick);
+	connect(ui.pushButton_histogram, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistogramClick);
+	connect(ui.pushButton_histogram2, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistogram2Click);
 	connect(ui.pushButton_bp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBPClick);
+	connect(ui.pushButton_matchTemplate, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonMatchTemplateClick);
+
 	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
 
@@ -42,7 +46,7 @@ PictureEditor::~PictureEditor()
 
 void PictureEditor::SlotPushButtonLoadClick()
 {
-	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp)"));
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
 	if (filename.isEmpty())
 		return;
 	srcImage = cv::imread(filename.toStdString());
@@ -287,6 +291,9 @@ void PictureEditor::SlotPushButtonContourClick(bool checked)
 	ui.spinBox->setValue(20);
 }
 
+/**
+ * 直方图
+ */
 void PictureEditor::SlotPushButtonHSClick()
 {
 	Mat hsvImage;
@@ -340,9 +347,230 @@ void PictureEditor::SlotPushButtonHSClick()
 	showImage(histImg);
 }
 
+/**
+ *一维直方图
+ */
+void PictureEditor::SlotPushButtonHistogramClick()
+{
+	//载入原图并显示
+	if (!srcImage.data)
+		return;
+	Mat grayImage;
+	cvtColor(srcImage, grayImage, COLOR_BGR2RGBA);
+
+	//system("color 1F");
+
+	//【2】定义变量
+	MatND dstHist;       // 在cv中用CvHistogram *hist = cvCreateHist
+	int dims = 1;
+	float hranges[] = { 0, 255 };
+	const float* ranges[] = { hranges };   // 这里需要为const类型
+	int size = 256;
+	int channels = 0;
+
+	//【3】计算图像的直方图
+	calcHist(&grayImage, 1, &channels, Mat(), dstHist, dims, &size, ranges);    // cv 中是cvCalcHist
+	int scale = 1;
+
+	Mat dstImage(size * scale, size, CV_8U, Scalar(0));
+	//【4】获取最大值和最小值
+	double minValue = 0;
+	double maxValue = 0;
+	minMaxLoc(dstHist, &minValue, &maxValue, 0, 0);  //  在cv中用的是cvGetMinMaxHistValue
+
+	//【5】绘制出直方图
+	int hpt = saturate_cast<int>(0.9 * size);
+	for (int i = 0; i < 256; i++)
+	{
+		float binValue = dstHist.at<float>(i);           //   注意hist中是float类型    而在OpenCV1.0版中用cvQueryHistValue_1D
+		int realValue = saturate_cast<int>(binValue * hpt / maxValue);
+		rectangle(dstImage, Point(i * scale, size - 1), Point((i + 1) * scale - 1, size - realValue), Scalar(255));
+	}
+	showImage(dstImage);
+}
+
+void PictureEditor::SlotPushButtonHistogram2Click()
+{
+	//【2】参数准备
+	int bins = 256;
+	int hist_size[] = { bins };
+	float range[] = { 0, 256 };
+	const float* ranges[] = { range };
+	MatND redHist, grayHist, blueHist;
+	int channels_r[] = { 0 };
+
+	//【3】进行直方图的计算（红色分量部分）
+	calcHist(&srcImage, 1, channels_r, Mat(), //不使用掩膜
+		redHist, 1, hist_size, ranges,
+		true, false);
+
+	//【4】进行直方图的计算（绿色分量部分）
+	int channels_g[] = { 1 };
+	calcHist(&srcImage, 1, channels_g, Mat(), // do not use mask
+		grayHist, 1, hist_size, ranges,
+		true, // the histogram is uniform
+		false);
+
+	//【5】进行直方图的计算（蓝色分量部分）
+	int channels_b[] = { 2 };
+	calcHist(&srcImage, 1, channels_b, Mat(), // do not use mask
+		blueHist, 1, hist_size, ranges,
+		true, // the histogram is uniform
+		false);
+
+	//-----------------------绘制出三色直方图------------------------
+	//参数准备
+	double maxValue_red, maxValue_green, maxValue_blue;
+	minMaxLoc(redHist, 0, &maxValue_red, 0, 0);
+	minMaxLoc(grayHist, 0, &maxValue_green, 0, 0);
+	minMaxLoc(blueHist, 0, &maxValue_blue, 0, 0);
+	int scale = 1;
+	int histHeight = 256;
+	Mat histImage = Mat::zeros(histHeight, bins * 3, CV_8UC3);
+
+	//正式开始绘制
+	for (int i = 0; i < bins; i++)
+	{
+		//参数准备
+		float binValue_red = redHist.at<float>(i);
+		float binValue_green = grayHist.at<float>(i);
+		float binValue_blue = blueHist.at<float>(i);
+		int intensity_red = cvRound(binValue_red * histHeight / maxValue_red);  //要绘制的高度
+		int intensity_green = cvRound(binValue_green * histHeight / maxValue_green);  //要绘制的高度
+		int intensity_blue = cvRound(binValue_blue * histHeight / maxValue_blue);  //要绘制的高度
+
+		//绘制红色分量的直方图
+		rectangle(histImage, Point(i * scale, histHeight - 1),
+			Point((i + 1) * scale - 1, histHeight - intensity_red),
+			Scalar(255, 0, 0));
+
+		//绘制绿色分量的直方图
+		rectangle(histImage, Point((i + bins) * scale, histHeight - 1),
+			Point((i + bins + 1) * scale - 1, histHeight - intensity_green),
+			Scalar(0, 255, 0));
+
+		//绘制蓝色分量的直方图
+		rectangle(histImage, Point((i + bins * 2) * scale, histHeight - 1),
+			Point((i + bins * 2 + 1) * scale - 1, histHeight - intensity_blue),
+			Scalar(0, 0, 255));
+
+	}
+	showImage(histImage);
+}
+
 void PictureEditor::SlotPushButtonBPClick()
 {
+	if (!srcImage.data)
+		return;
+	Mat g_hsvImage;
+	Mat g_hueImage;
+	int g_bins = 30;//直方图组距
+	cvtColor(srcImage, g_hsvImage, COLOR_BGR2HSV);
+	//【2】分离 Hue 色调通道
+	g_hueImage.create(g_hsvImage.size(), g_hsvImage.depth());
+	int ch[] = { 0, 0 };
+	mixChannels(&g_hsvImage, 1, &g_hueImage, 1, ch, 1);
 
+	//【1】参数准备
+	MatND hist;
+	int histSize = MAX(g_bins, 2);
+	float hue_range[] = { 0, 180 };
+	const float* ranges = { hue_range };
+
+	//【2】计算直方图并归一化
+	calcHist(&g_hueImage, 1, 0, Mat(), hist, 1, &histSize, &ranges, true, false);
+	normalize(hist, hist, 0, 255, NORM_MINMAX, -1, Mat());
+
+	//【3】计算反向投影
+	MatND backproj;
+	calcBackProject(&g_hueImage, 1, 0, hist, backproj, &ranges, 1, true);
+
+	//【4】显示反向投影
+	//imshow("反向投影图", backproj);
+	showImage(backproj);
+
+	//【5】绘制直方图的参数准备
+	int w = 400; int h = 400;
+	int bin_w = cvRound((double)w / histSize);
+	Mat histImg = Mat::zeros(w, h, CV_8UC3);
+
+	//【6】绘制直方图
+	for (int i = 0; i < g_bins; i++)
+	{
+		rectangle(histImg, Point(i * bin_w, h), Point((i + 1) * bin_w, h - cvRound(hist.at<float>(i) * h / 255.0)), Scalar(100, 123, 255), -1);
+	}
+
+	QImageWidget* imageWidget = new QImageWidget;
+	imageWidget->resize(500, 500);
+	imageWidget->setPixmap(histImg);
+	imageWidget->show();
+	imageWidget->setWindowTitle("dstImage");
+	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
+}
+
+void PictureEditor::SlotPushButtonMatchTemplateClick()
+{
+	Mat templateImage;
+	Mat resultImage;
+	//  方法【0】- 平方差匹配法(SQDIFF)\n"
+	//	方法【1】- 归一化平方差匹配法(SQDIFF NORMED)\n"
+	//	方法【2】- 相关匹配法(TM CCORR)\n"
+	//	方法【3】- 归一化相关匹配法(TM CCORR NORMED)\n"
+	//	方法【4】- 相关系数匹配法(TM COEFF)\n"
+	//	方法【5】- 归一化相关系数匹配法(TM COEFF NORMED)\n" );
+	int nMatchMethod = 5;
+	int nMaxTrackbarNum = 5;
+
+	// 加载模板图片
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+	templateImage = cv::imread(filename.toStdString());
+
+
+	//【1】给局部变量初始化
+	Mat srcImage_t;
+	srcImage.copyTo(srcImage_t);
+
+	//【2】初始化用于结果输出的矩阵
+	int resultImage_cols = srcImage.cols - templateImage.cols + 1;
+	int resultImage_rows = srcImage.rows - templateImage.rows + 1;
+	resultImage.create(resultImage_cols, resultImage_rows, CV_32FC1);
+
+	//【3】进行匹配和标准化
+	matchTemplate(srcImage, templateImage, resultImage, nMatchMethod);
+	normalize(resultImage, resultImage, 0, 1, NORM_MINMAX, -1, Mat());
+
+	//【4】通过函数 minMaxLoc 定位最匹配的位置
+	double minValue; double maxValue; Point minLocation; Point maxLocation;
+	Point matchLocation;
+	minMaxLoc(resultImage, &minValue, &maxValue, &minLocation, &maxLocation, Mat());
+
+	//【5】对于方法 SQDIFF 和 SQDIFF_NORMED, 越小的数值有着更高的匹配结果. 而其余的方法, 数值越大匹配效果越好
+	//此句代码的OpenCV2版为：
+	//if( g_nMatchMethod  == CV_TM_SQDIFF || g_nMatchMethod == CV_TM_SQDIFF_NORMED )
+	//此句代码的OpenCV3版为：
+	if (nMatchMethod == TM_SQDIFF || nMatchMethod == TM_SQDIFF_NORMED)
+	{
+		matchLocation = minLocation;
+	}
+	else
+	{
+		matchLocation = maxLocation;
+	}
+
+	//【6】绘制出矩形，并显示最终结果
+	rectangle(srcImage_t, matchLocation, Point(matchLocation.x + templateImage.cols, matchLocation.y + templateImage.rows), Scalar(0, 0, 255), 2, 8, 0);
+	rectangle(resultImage, matchLocation, Point(matchLocation.x + templateImage.cols, matchLocation.y + templateImage.rows), Scalar(0, 0, 255), 2, 8, 0);
+
+	showImage(srcImage_t);
+
+	QImageWidget* imageWidget = new QImageWidget;
+	imageWidget->resize(500, 500);
+	imageWidget->setPixmap(resultImage);
+	imageWidget->show();
+	imageWidget->setWindowTitle("dstImage");
+	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
 }
 
 void PictureEditor::SlotSpinBox(int nThresh)
