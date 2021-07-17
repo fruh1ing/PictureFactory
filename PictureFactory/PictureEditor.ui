@@ -73,6 +73,27 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton_harris">
+       <property name="text">
+        <string>Harris</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_tomasi">
+       <property name="text">
+        <string>Shi-Tomasi</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_subpix">
+       <property name="text">
+        <string>亚像素角点</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>

@@ -36,6 +36,9 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_histogram2, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHistogram2Click);
 	connect(ui.pushButton_bp, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonBPClick);
 	connect(ui.pushButton_matchTemplate, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonMatchTemplateClick);
+	connect(ui.pushButton_harris, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHarrisClick);
+	connect(ui.pushButton_tomasi, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonShiTomasiClick);
+	connect(ui.pushButton_subpix, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSubpixClick);
 
 	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
@@ -573,6 +576,160 @@ void PictureEditor::SlotPushButtonMatchTemplateClick()
 	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
 }
 
+void PictureEditor::SlotPushButtonHarrisClick()
+{
+	Mat srcImage1, grayImage;
+	int thresh = 30; //当前阈值
+	int max_thresh = 175; //最大阈值
+
+	srcImage1 = srcImage.clone();
+
+	//存留一张灰度图
+	cvtColor(srcImage1, grayImage, COLOR_BGR2GRAY);
+
+	//---------------------------【1】定义一些局部变量-----------------------------
+	Mat normImage;//归一化后的图
+	Mat scaledImage;//线性变换后的八位无符号整型的图
+
+	//---------------------------【2】初始化---------------------------------------
+	//置零当前需要显示的两幅图，即清除上一次调用此函数时他们的值
+	dstImage = Mat::zeros(srcImage.size(), CV_32FC1);
+
+	//---------------------------【3】正式检测-------------------------------------
+	//进行角点检测
+	cornerHarris(grayImage, dstImage, 2, 3, 0.04, BORDER_DEFAULT);
+
+	// 归一化与转换
+	normalize(dstImage, normImage, 0, 255, NORM_MINMAX, CV_32FC1, Mat());
+	convertScaleAbs(normImage, scaledImage);//将归一化后的图线性变换成8位无符号整型 
+
+	//---------------------------【4】进行绘制-------------------------------------
+	// 将检测到的，且符合阈值条件的角点绘制出来
+	for (int j = 0; j < normImage.rows; j++)
+	{
+		for (int i = 0; i < normImage.cols; i++)
+		{
+			if ((int)normImage.at<float>(j, i) > thresh + 80)
+			{
+				circle(srcImage1, Point(i, j), 5, Scalar(10, 10, 255), 2, 8, 0);
+				circle(scaledImage, Point(i, j), 5, Scalar(0, 10, 255), 2, 8, 0);
+			}
+		}
+	}
+	//---------------------------【5】显示最终效果---------------------------------
+	showImage(srcImage1);
+	showImage2NewWidget(scaledImage, "scaledImage");
+}
+
+void PictureEditor::SlotPushButtonShiTomasiClick()
+{
+	Mat grayImage;
+	int maxCornerNumber = 33;
+	int maxTrackbarNumber = 500;
+	RNG rng(12345);//初始化随机数生成器
+
+	//【1】对变量小于等于1时的处理
+	if (maxCornerNumber <= 1) { maxCornerNumber = 1; }
+
+	//【2】Shi-Tomasi算法（goodFeaturesToTrack函数）的参数准备
+	std::vector<Point2f> corners;
+	double qualityLevel = 0.01;//角点检测可接受的最小特征值
+	double minDistance = 10;//角点之间的最小距离
+	int blockSize = 3;//计算导数自相关矩阵时指定的邻域范围
+	double k = 0.04;//权重系数
+	Mat copyImage = srcImage.clone();	//复制源图像到一个临时变量中，作为感兴趣区域
+
+	cvtColor(srcImage, grayImage, COLOR_BGR2GRAY);
+
+	//【3】进行Shi-Tomasi角点检测
+	goodFeaturesToTrack(grayImage,//输入图像
+		corners,//检测到的角点的输出向量
+		maxCornerNumber,//角点的最大数量
+		qualityLevel,//角点检测可接受的最小特征值
+		minDistance,//角点之间的最小距离
+		Mat(),//感兴趣区域
+		blockSize,//计算导数自相关矩阵时指定的邻域范围
+		false,//不使用Harris角点检测
+		k);//权重系数
+
+
+	//【4】输出文字信息
+	qDebug() << QString("\t>此次检测到的角点数量为:") << corners.size();
+
+	//【5】绘制检测到的角点
+	int r = 4;
+	for (int i = 0; i < corners.size(); i++)
+	{
+		//以随机的颜色绘制出角点
+		circle(copyImage, corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
+			rng.uniform(0, 255)), -1, 8, 0);
+	}
+	showImage(copyImage);
+}
+
+void PictureEditor::SlotPushButtonSubpixClick()
+{
+	Mat grayImage;
+	int maxCornerNumber = 33;
+	int maxTrackbarNumber = 500;
+	RNG rng(12345);//初始化随机数生成器
+
+	//【1】对变量小于等于1时的处理
+	if (maxCornerNumber <= 1) { maxCornerNumber = 1; }
+
+	//【2】Shi-Tomasi算法（goodFeaturesToTrack函数）的参数准备
+	std::vector<Point2f> corners;
+	double qualityLevel = 0.01;//角点检测可接受的最小特征值
+	double minDistance = 10;//角点之间的最小距离
+	int blockSize = 3;//计算导数自相关矩阵时指定的邻域范围
+	double k = 0.04;//权重系数
+	Mat copyImage = srcImage.clone();	//复制源图像到一个临时变量中，作为感兴趣区域
+
+	cvtColor(srcImage, grayImage, COLOR_BGR2GRAY);
+
+	//【3】进行Shi-Tomasi角点检测
+	goodFeaturesToTrack(grayImage,//输入图像
+		corners,//检测到的角点的输出向量
+		maxCornerNumber,//角点的最大数量
+		qualityLevel,//角点检测可接受的最小特征值
+		minDistance,//角点之间的最小距离
+		Mat(),//感兴趣区域
+		blockSize,//计算导数自相关矩阵时指定的邻域范围
+		false,//不使用Harris角点检测
+		k);//权重系数
+
+
+	//【4】输出文字信息
+	qDebug() << QString("\t>此次检测到的角点数量为:") << corners.size();
+
+	//【5】绘制检测到的角点
+	int r = 4;
+	for (int i = 0; i < corners.size(); i++)
+	{
+		//以随机的颜色绘制出角点
+		circle(copyImage, corners[i], r, Scalar(rng.uniform(0, 255), rng.uniform(0, 255),
+			rng.uniform(0, 255)), -1, 8, 0);
+	}
+	showImage(copyImage);
+
+	//【7】亚像素角点检测的参数设置
+	Size winSize = Size(5, 5);
+	Size zeroZone = Size(-1, -1);
+	//此句代码的OpenCV2版为：
+	//TermCriteria criteria = TermCriteria( CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 40, 0.001 );
+	//此句代码的OpenCV3版为：
+	TermCriteria criteria = TermCriteria(TermCriteria::EPS + TermCriteria::MAX_ITER, 40, 0.001);
+
+	//【8】计算出亚像素角点位置
+	cornerSubPix(grayImage, corners, winSize, zeroZone, criteria);
+
+	//【9】输出角点信息
+	for (int i = 0; i < corners.size(); i++)
+	{
+		qDebug() << " \t>>精确角点坐标[" << i << "]  (" << corners[i].x << "," << corners[i].y << ")" << endl;
+	}
+}
+
 void PictureEditor::SlotSpinBox(int nThresh)
 {
 	if (srcImage.empty())
@@ -690,4 +847,14 @@ void PictureEditor::showImage(const cv::Mat& mat)
 			ui.label_pic->setPixmap(pix.scaled(ui.label_pic->width(), ui.label_pic->height()));
 		}
 	}
+}
+
+void PictureEditor::showImage2NewWidget(const cv::Mat& mat, const QString& windowname /*= "disImage"*/)
+{
+	QImageWidget* imageWidget = new QImageWidget;
+	imageWidget->resize(500, 500);
+	imageWidget->setPixmap(mat);
+	imageWidget->show();
+	imageWidget->setWindowTitle(windowname);
+	connect(imageWidget, &QImageWidget::closed, imageWidget, &QImageWidget::deleteLater);
 }

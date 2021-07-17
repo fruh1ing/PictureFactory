@@ -16,6 +16,7 @@ public:
 
 	QImage cvMat2QImage(const cv::Mat& mat);
 	void showImage(const cv::Mat& mat);
+	void showImage2NewWidget(const cv::Mat& mat, const QString& windowname = "disImage");
 
 private slots:
 	void SlotPushButtonLoadClick();
@@ -42,6 +43,9 @@ private slots:
 	void SlotPushButtonHistogram2Click();
 	void SlotPushButtonBPClick();
 	void SlotPushButtonMatchTemplateClick();
+	void SlotPushButtonHarrisClick();
+	void SlotPushButtonShiTomasiClick();
+	void SlotPushButtonSubpixClick();
 	void SlotSpinBox(int);
 
 
