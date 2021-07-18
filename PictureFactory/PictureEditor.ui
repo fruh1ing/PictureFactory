@@ -94,6 +94,55 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButton_surf_detect">
+       <property name="text">
+        <string>SURF检测</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_surf_desc">
+       <property name="text">
+        <string>SURF描述</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_flann_match">
+       <property name="text">
+        <string>FLANN匹配</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_flann_surf">
+       <property name="text">
+        <string>FLANN-SURF</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_sift">
+       <property name="text">
+        <string>SIFT暴力匹配</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_look">
+       <property name="text">
+        <string>寻找已知物体</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_orb">
+       <property name="text">
+        <string>ORB</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="verticalSpacer_2">
        <property name="orientation">
         <enum>Qt::Vertical</enum>

@@ -46,6 +46,13 @@ private slots:
 	void SlotPushButtonHarrisClick();
 	void SlotPushButtonShiTomasiClick();
 	void SlotPushButtonSubpixClick();
+	void SlotPushButtonSurfDetectClick();
+	void SlotPushButtonSurfDescClick();
+	void SlotPushButtonFlannMatchClick();
+	void SlotPushButtonFlannSurfClick();
+	void SlotPushButtonSiftClick();
+	void SlotPushButtonLookClick();
+	void SlotPushButtonOrbClick();
 	void SlotSpinBox(int);
 
 

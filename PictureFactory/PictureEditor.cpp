@@ -2,6 +2,8 @@
 #include <QFileDialog>
 #include <QDebug>
 #include<opencv2/imgproc/imgproc.hpp>
+#include <opencv2/features2d/features2d.hpp>
+#include <opencv2/core/core.hpp>
 #include <vector>
 #include "Processing.h"
 #include "QImageWidget.h"
@@ -39,6 +41,13 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_harris, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonHarrisClick);
 	connect(ui.pushButton_tomasi, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonShiTomasiClick);
 	connect(ui.pushButton_subpix, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSubpixClick);
+	connect(ui.pushButton_surf_detect, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSurfDetectClick);
+	connect(ui.pushButton_surf_desc, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSurfDescClick);
+	connect(ui.pushButton_flann_match, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonFlannMatchClick);
+	connect(ui.pushButton_flann_surf, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonFlannSurfClick);
+	connect(ui.pushButton_sift, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSiftClick);
+	connect(ui.pushButton_look, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonLookClick);
+	connect(ui.pushButton_orb, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonOrbClick);
 
 	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
@@ -728,6 +737,58 @@ void PictureEditor::SlotPushButtonSubpixClick()
 	{
 		qDebug() << " \t>>精确角点坐标[" << i << "]  (" << corners[i].x << "," << corners[i].y << ")" << endl;
 	}
+}
+
+void PictureEditor::SlotPushButtonSurfDetectClick()
+{
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+	//Mat srcImage2 = cv::imread(filename.toStdString());
+	//Mat srcImage1 = srcImage.clone();
+	////定义需要用到的变量和类
+	//int minHessian = 400;//定义SURF中的hessian阈值特征点检测算子
+	//cv::Ptr<> detector(minHessian);//定义一个SurfFeatureDetector（SURF） 特征检测类对象
+	//std::vector<KeyPoint> keypoints_1, keypoints_2;//vector模板类是能够存放任意类型的动态数组，能够增加和压缩数据
+
+	////调用detect函数检测出SURF特征关键点，保存在vector容器中
+	//detector.detect(srcImage1, keypoints_1);
+	//detector.detect(srcImage2, keypoints_2);
+
+	////绘制特征关键点.
+	//Mat img_keypoints_1; Mat img_keypoints_2;
+	//drawKeypoints(srcImage1, keypoints_1, img_keypoints_1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+	//drawKeypoints(srcImage2, keypoints_2, img_keypoints_2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+}
+
+void PictureEditor::SlotPushButtonSurfDescClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonFlannMatchClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonFlannSurfClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonSiftClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonLookClick()
+{
+
+}
+
+void PictureEditor::SlotPushButtonOrbClick()
+{
+
 }
 
 void PictureEditor::SlotSpinBox(int nThresh)
