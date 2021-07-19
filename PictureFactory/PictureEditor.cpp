@@ -783,12 +783,169 @@ void PictureEditor::SlotPushButtonSiftClick()
 
 void PictureEditor::SlotPushButtonLookClick()
 {
+	////【0】改变console字体颜色
+	//system("color 1F");
+
+	////【0】显示欢迎和帮助文字
+	//ShowHelpText();
+
+	////【1】载入原始图片
+	//Mat srcImage1 = imread("1.jpg", 1);
+	//Mat srcImage2 = imread("2.jpg", 1);
+	//if (!srcImage1.data || !srcImage2.data)
+	//{
+	//	printf("读取图片错误，请确定目录下是否有imread函数指定的图片存在~！ \n"); return false;
+	//}
+
+	////【2】使用SURF算子检测关键点
+	//int minHessian = 400;//SURF算法中的hessian阈值
+	//SurfFeatureDetector detector(minHessian);//定义一个SurfFeatureDetector（SURF） 特征检测类对象  
+	//vector<KeyPoint> keypoints_object, keypoints_scene;//vector模板类，存放任意类型的动态数组
+
+	////【3】调用detect函数检测出SURF特征关键点，保存在vector容器中
+	//detector.detect(srcImage1, keypoints_object);
+	//detector.detect(srcImage2, keypoints_scene);
+
+	////【4】计算描述符（特征向量）
+	//SurfDescriptorExtractor extractor;
+	//Mat descriptors_object, descriptors_scene;
+	//extractor.compute(srcImage1, keypoints_object, descriptors_object);
+	//extractor.compute(srcImage2, keypoints_scene, descriptors_scene);
+
+	////【5】使用FLANN匹配算子进行匹配
+	//FlannBasedMatcher matcher;
+	//vector< DMatch > matches;
+	//matcher.match(descriptors_object, descriptors_scene, matches);
+	//double max_dist = 0; double min_dist = 100;//最小距离和最大距离
+
+	////【6】计算出关键点之间距离的最大值和最小值
+	//for (int i = 0; i < descriptors_object.rows; i++)
+	//{
+	//	double dist = matches[i].distance;
+	//	if (dist < min_dist) min_dist = dist;
+	//	if (dist > max_dist) max_dist = dist;
+	//}
+
+	//printf(">Max dist 最大距离 : %f \n", max_dist);
+	//printf(">Min dist 最小距离 : %f \n", min_dist);
+
+	////【7】存下匹配距离小于3*min_dist的点对
+	//std::vector< DMatch > good_matches;
+	//for (int i = 0; i < descriptors_object.rows; i++)
+	//{
+	//	if (matches[i].distance < 3 * min_dist)
+	//	{
+	//		good_matches.push_back(matches[i]);
+	//	}
+	//}
+
+	////绘制出匹配到的关键点
+	//Mat img_matches;
+	//drawMatches(srcImage1, keypoints_object, srcImage2, keypoints_scene,
+	//	good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
+	//	vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+
+	////定义两个局部变量
+	//vector<Point2f> obj;
+	//vector<Point2f> scene;
+
+	////从匹配成功的匹配对中获取关键点
+	//for (unsigned int i = 0; i < good_matches.size(); i++)
+	//{
+	//	obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
+	//	scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
+	//}
+
+	//Mat H = findHomography(obj, scene, CV_RANSAC);//计算透视变换 
+
+	////从待测图片中获取角点
+	//vector<Point2f> obj_corners(4);
+	//obj_corners[0] = cvPoint(0, 0); obj_corners[1] = cvPoint(srcImage1.cols, 0);
+	//obj_corners[2] = cvPoint(srcImage1.cols, srcImage1.rows); obj_corners[3] = cvPoint(0, srcImage1.rows);
+	//vector<Point2f> scene_corners(4);
+
+	////进行透视变换
+	//perspectiveTransform(obj_corners, scene_corners, H);
+
+	////绘制出角点之间的直线
+	//line(img_matches, scene_corners[0] + Point2f(static_cast<float>(srcImage1.cols), 0), scene_corners[1] + Point2f(static_cast<float>(srcImage1.cols), 0), Scalar(255, 0, 123), 4);
+	//line(img_matches, scene_corners[1] + Point2f(static_cast<float>(srcImage1.cols), 0), scene_corners[2] + Point2f(static_cast<float>(srcImage1.cols), 0), Scalar(255, 0, 123), 4);
+	//line(img_matches, scene_corners[2] + Point2f(static_cast<float>(srcImage1.cols), 0), scene_corners[3] + Point2f(static_cast<float>(srcImage1.cols), 0), Scalar(255, 0, 123), 4);
+	//line(img_matches, scene_corners[3] + Point2f(static_cast<float>(srcImage1.cols), 0), scene_corners[0] + Point2f(static_cast<float>(srcImage1.cols), 0), Scalar(255, 0, 123), 4);
 
 }
 
 void PictureEditor::SlotPushButtonOrbClick()
 {
+	////【0】载入源图，显示并转化为灰度图
+	//Mat srcImage = imread("1.jpg");
+	//imshow("原始图", srcImage);
+	//Mat grayImage;
+	//cvtColor(srcImage, grayImage, CV_BGR2GRAY);
 
+	////------------------检测SIFT特征点并在图像中提取物体的描述符----------------------
+
+	////【1】参数定义
+	//OrbFeatureDetector featureDetector;
+	//vector<KeyPoint> keyPoints;
+	//Mat descriptors;
+
+	////【2】调用detect函数检测出特征关键点，保存在vector容器中
+	//featureDetector.detect(grayImage, keyPoints);
+
+	////【3】计算描述符（特征向量）
+	//OrbDescriptorExtractor featureExtractor;
+	//featureExtractor.compute(grayImage, keyPoints, descriptors);
+
+	////【4】基于FLANN的描述符对象匹配
+	//flann::Index flannIndex(descriptors, flann::LshIndexParams(12, 20, 2), cvflann::FLANN_DIST_HAMMING);
+
+	////【5】初始化视频采集对象
+	//VideoCapture cap(0);
+
+	//unsigned int frameCount = 0;//帧数
+
+	////【6】轮询，直到按下ESC键退出循环
+	//while (1)
+	//{
+	//	double time0 = static_cast<double>(getTickCount());//记录起始时间
+	//	Mat  captureImage, captureImage_gray;//定义两个Mat变量，用于视频采集
+	//	cap >> captureImage;//采集视频帧
+	//	if (captureImage.empty())//采集为空的处理
+	//		continue;
+
+	//	//转化图像到灰度
+	//	cvtColor(captureImage, captureImage_gray, CV_BGR2GRAY);//采集的视频帧转化为灰度图
+
+	//	//【7】检测SIFT关键点并提取测试图像中的描述符
+	//	vector<KeyPoint> captureKeyPoints;
+	//	Mat captureDescription;
+
+	//	//【8】调用detect函数检测出特征关键点，保存在vector容器中
+	//	featureDetector.detect(captureImage_gray, captureKeyPoints);
+
+	//	//【9】计算描述符
+	//	featureExtractor.compute(captureImage_gray, captureKeyPoints, captureDescription);
+
+	//	//【10】匹配和测试描述符，获取两个最邻近的描述符
+	//	Mat matchIndex(captureDescription.rows, 2, CV_32SC1), matchDistance(captureDescription.rows, 2, CV_32FC1);
+	//	flannIndex.knnSearch(captureDescription, matchIndex, matchDistance, 2, flann::SearchParams());//调用K邻近算法
+
+	//	//【11】根据劳氏算法（Lowe's algorithm）选出优秀的匹配
+	//	vector<DMatch> goodMatches;
+	//	for (int i = 0; i < matchDistance.rows; i++)
+	//	{
+	//		if (matchDistance.at<float>(i, 0) < 0.6 * matchDistance.at<float>(i, 1))
+	//		{
+	//			DMatch dmatches(i, matchIndex.at<int>(i, 0), matchDistance.at<float>(i, 0));
+	//			goodMatches.push_back(dmatches);
+	//		}
+	//	}
+
+	//	//【12】绘制并显示匹配窗口
+	//	Mat resultImage;
+	//	drawMatches(captureImage, captureKeyPoints, srcImage, keyPoints, goodMatches, resultImage);
+	//	imshow("匹配窗口", resultImage);
 }
 
 void PictureEditor::SlotSpinBox(int nThresh)
