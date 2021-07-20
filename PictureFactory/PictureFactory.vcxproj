@@ -55,16 +55,16 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>D:\opencv\build\include;D:\repositories\PictureFactory\PictureFactory\PictureFactory\customwidgets;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\lib\opencv4.5.3\build\install\include;D:\repositories\PictureFactory\PictureFactory\PictureFactory\customwidgets;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\lib\opencv4.5.3\build\install\x64\vc16\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>D:\opencv\build\include;D:\repositories\PictureFactory\PictureFactory\PictureFactory\customwidgets;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\lib\opencv4.5.3\build\install\include;D:\repositories\PictureFactory\PictureFactory\PictureFactory\customwidgets;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\lib\opencv4.5.3\build\install\x64\vc16\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Link>
-      <AdditionalDependencies>opencv_world451d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_world453d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>.\customwidgets;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -72,7 +72,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Link>
-      <AdditionalDependencies>opencv_world451d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_world453d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>.\customwidgets;.\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
