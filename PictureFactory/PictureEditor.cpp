@@ -749,31 +749,112 @@ void PictureEditor::SlotPushButtonSurfDetectClick()
 	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
 	if (filename.isEmpty())
 		return;
-	//Mat srcImage2 = cv::imread(filename.toStdString());
-	//Mat srcImage1 = srcImage.clone();
-	////定义需要用到的变量和类
-	//int minHessian = 400;//定义SURF中的hessian阈值特征点检测算子
-	//cv::Ptr<> detector(minHessian);//定义一个SurfFeatureDetector（SURF） 特征检测类对象
-	//std::vector<KeyPoint> keypoints_1, keypoints_2;//vector模板类是能够存放任意类型的动态数组，能够增加和压缩数据
+	Mat srcImage2 = cv::imread(filename.toStdString());
+	Mat srcImage1 = srcImage.clone();
+	if (!srcImage1.data || !srcImage2.data)
+		return;
+	//定义需要用到的变量和类
+	int minHessian = 400;//定义SURF中的hessian阈值特征点检测算子
+	Ptr<SURF> detector = SURF::create(minHessian);//定义一个SurfFeatureDetector（SURF） 特征检测类对象
+	std::vector<KeyPoint> keypoints_1, keypoints_2;//vector模板类是能够存放任意类型的动态数组，能够增加和压缩数据
 
-	////调用detect函数检测出SURF特征关键点，保存在vector容器中
-	//detector.detect(srcImage1, keypoints_1);
-	//detector.detect(srcImage2, keypoints_2);
+	//调用detect函数检测出SURF特征关键点，保存在vector容器中
+	detector->detect(srcImage1, keypoints_1);
+	detector->detect(srcImage2, keypoints_2);
 
-	////绘制特征关键点.
-	//Mat img_keypoints_1; Mat img_keypoints_2;
-	//drawKeypoints(srcImage1, keypoints_1, img_keypoints_1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
-	//drawKeypoints(srcImage2, keypoints_2, img_keypoints_2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+	//绘制特征关键点.
+	Mat img_keypoints_1; Mat img_keypoints_2;
+	drawKeypoints(srcImage1, keypoints_1, img_keypoints_1, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+	drawKeypoints(srcImage2, keypoints_2, img_keypoints_2, Scalar::all(-1), DrawMatchesFlags::DEFAULT);
+
+	showImage(img_keypoints_1);
+	showImage2NewWidget(img_keypoints_2);
 }
 
 void PictureEditor::SlotPushButtonSurfDescClick()
 {
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+	Mat srcImage2 = cv::imread(filename.toStdString());
+	Mat srcImage1 = srcImage.clone();
+	if (!srcImage1.data || !srcImage2.data)
+		return;
 
+	int minHessian = 700;
+	Ptr<SURF> detector = SURF::create(minHessian);
+	std::vector<KeyPoint> keypoint1, keypoint2;
+	Mat descriptors1, descriptors2;
+	detector->detectAndCompute(srcImage1, noArray(), keypoint1, descriptors1);
+	detector->detectAndCompute(srcImage2, noArray(), keypoint2, descriptors2);
+
+	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create(DescriptorMatcher::BRUTEFORCE);
+	std::vector<DMatch> matches;
+	matcher->match(descriptors1, descriptors2, matches);
+
+	Mat resultImg;
+	drawMatches(srcImage1, keypoint1, srcImage2, keypoint2, matches, resultImg);
+	showImage(resultImg);
 }
 
 void PictureEditor::SlotPushButtonFlannMatchClick()
 {
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+	Mat srcImage2 = cv::imread(filename.toStdString());
+	Mat srcImage1 = srcImage.clone();
+	if (!srcImage1.data || !srcImage2.data)
+		return;
+	int minHessian = 300;
+	std::vector<KeyPoint> keypoint1, keypoint2;
+	Mat descriptors1, descriptors2;
+	Ptr<SURF> detector = SURF::create(minHessian);
 
+	detector->detectAndCompute(srcImage1, noArray(), keypoint1, descriptors1);
+	detector->detectAndCompute(srcImage2, noArray(), keypoint2, descriptors2);
+
+	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+	std::vector<DMatch> matches;
+	matcher->match(descriptors1, descriptors2, matches);
+	double max_dist = 0; double min_dist = 100;
+
+	//快速计算关键点之间的最大和最小距离
+	for (int i = 0; i < descriptors1.rows; i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	//输出距离信息
+	qDebug() << ("> 最大距离（Max dist） : %f \n", max_dist);
+	qDebug() << ("> 最小距离（Min dist） : %f \n", min_dist);
+
+	//存下符合条件的匹配结果（即其距离小于2* min_dist的），使用radiusMatch同样可行
+	std::vector< DMatch > good_matches;
+	for (int i = 0; i < descriptors1.rows; i++)
+	{
+		if (matches[i].distance < 2 * min_dist)
+		{
+			good_matches.push_back(matches[i]);
+		}
+	}
+
+	// 绘制出符合条件的匹配点
+	Mat img_matches;
+	drawMatches(srcImage1, keypoint1, srcImage2, keypoint2,
+		good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
+		std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+
+	// 输出相关匹配点信息
+	for (int i = 0; i < good_matches.size(); i++)
+	{
+		qDebug() << (">符合条件的匹配点 [%d] 特征点1: %d  -- 特征点2: %d  \n", i, good_matches[i].queryIdx, good_matches[i].trainIdx);
+	}
+
+	// 显示效果图
+	showImage(img_matches);
 }
 
 void PictureEditor::SlotPushButtonFlannSurfClick()
@@ -954,12 +1035,11 @@ void PictureEditor::SlotPushButtonOrbClick()
 		//【12】绘制并显示匹配窗口
 		Mat resultImage;
 		drawMatches(captureImage, captureKeyPoints, srcImage, keyPoints, goodMatches, resultImage);
-		//showImage(resultImage);
-		//_sleep(3000);
+		showImage(resultImage);
 		qDebug() << ">帧率= " << getTickFrequency() / (getTickCount() - time0);
 
-		imshow("匹配窗口", resultImage);
-		//if (char(waitKey(1)) == 27) break;
+		//imshow("匹配窗口", resultImage);
+		if (char(waitKey(1)) == 27) break;
 	}
 }
 
