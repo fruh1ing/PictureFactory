@@ -53,6 +53,7 @@ PictureEditor::PictureEditor(QWidget* parent)
 	connect(ui.pushButton_sift, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonSiftClick);
 	connect(ui.pushButton_look, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonLookClick);
 	connect(ui.pushButton_orb, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonOrbClick);
+	connect(ui.pushButton_repair, &QPushButton::clicked, this, &PictureEditor::SlotPushButtonRepairClick);
 
 	connect(ui.spinBox, SIGNAL(valueChanged(int)), this, SLOT(SlotSpinBox(int)));
 }
@@ -854,17 +855,117 @@ void PictureEditor::SlotPushButtonFlannMatchClick()
 	}
 
 	// 显示效果图
-	showImage(img_matches);
+	showImage2NewWidget(img_matches);
 }
 
 void PictureEditor::SlotPushButtonFlannSurfClick()
 {
+	//载入图像、显示并转化为灰度图
+	Mat trainImage_gray;
+	cvtColor(srcImage, trainImage_gray, COLOR_BGR2GRAY);
 
+	//检测Surf关键点、提取训练图像描述符
+	std::vector<KeyPoint> train_keyPoint;
+	Mat trainDescriptor;
+	Ptr<SURF> detector = SURF::create(80);
+	detector->detectAndCompute(trainImage_gray, noArray(), train_keyPoint, trainDescriptor);
+
+	//创建基于FLANN的描述符匹配对象
+	auto matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+	std::vector<Mat> train_desc_collection(1, trainDescriptor);
+	matcher->add(train_desc_collection);
+	matcher->train();
+
+	// 读取测试对象
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+
+	Mat testImage, testImage_gray;
+	testImage = imread(filename.toStdString());
+	if (testImage.empty())
+		return;
+
+	//<2>转化图像到灰度
+	cvtColor(testImage, testImage_gray, COLOR_BGR2GRAY);
+
+	//<3>检测S关键点、提取测试图像描述符
+	std::vector<KeyPoint> test_keyPoint;
+	Mat testDescriptor;
+	detector->detect(testImage_gray, test_keyPoint);
+	detector->compute(testImage_gray, test_keyPoint, testDescriptor);
+
+	//<4>匹配训练和测试描述符
+	std::vector<std::vector<DMatch> > matches;
+	matcher->knnMatch(testDescriptor, matches, 2);
+
+	// <5>根据劳氏算法（Lowe's algorithm），得到优秀的匹配点
+	std::vector<DMatch> goodMatches;
+	for (unsigned int i = 0; i < matches.size(); i++)
+	{
+		if (matches[i][0].distance < 0.6 * matches[i][1].distance)
+			goodMatches.push_back(matches[i][0]);
+	}
+
+	//<6>绘制匹配点并显示窗口
+	//Mat dstImage;
+	drawMatches(testImage, test_keyPoint, srcImage, train_keyPoint, goodMatches, dstImage);
+	//imshow("匹配窗口", dstImage);
+	showImage2NewWidget(dstImage);
 }
 
 void PictureEditor::SlotPushButtonSiftClick()
 {
+	//【1】载入图像、显示并转化为灰度图
+	Mat trainImage_gray;
+	cvtColor(srcImage, trainImage_gray, COLOR_BGR2GRAY);
 
+	//【2】检测SIFT关键点、提取训练图像描述符
+	std::vector<KeyPoint> train_keyPoint;
+	Mat trainDescription;
+	Ptr<SIFT> detector = SIFT::create();
+	detector->detectAndCompute(trainImage_gray, noArray(), train_keyPoint, trainDescription);
+
+
+	// 【3】进行基于描述符的暴力匹配
+	BFMatcher matcher;
+	std::vector<Mat> train_desc_collection(1, trainDescription);
+	matcher.add(train_desc_collection);
+	matcher.train();
+
+	// 读取图片
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+	Mat captureImage, captureImage_gray;
+	captureImage = imread(filename.toStdString());
+	if (captureImage.empty())
+		return;
+
+	//<2>转化图像到灰度
+	cvtColor(captureImage, captureImage_gray, COLOR_BGR2GRAY);
+
+	//<3>检测SURF关键点、提取测试图像描述符
+	std::vector<KeyPoint> test_keyPoint;
+	Mat testDescriptor;
+	detector->detectAndCompute(captureImage_gray, noArray(), test_keyPoint, testDescriptor);
+
+	//<4>匹配训练和测试描述符
+	std::vector<std::vector<DMatch> > matches;
+	matcher.knnMatch(testDescriptor, matches, 2);
+
+	// <5>根据劳氏算法（Lowe's algorithm），得到优秀的匹配点
+	std::vector<DMatch> goodMatches;
+	for (unsigned int i = 0; i < matches.size(); i++)
+	{
+		if (matches[i][0].distance < 0.6 * matches[i][1].distance)
+			goodMatches.push_back(matches[i][0]);
+	}
+
+	//<6>绘制匹配点并显示窗口
+	Mat dstImage;
+	drawMatches(captureImage, test_keyPoint, srcImage, train_keyPoint, goodMatches, dstImage);
+	showImage2NewWidget(dstImage);
 }
 
 void PictureEditor::SlotPushButtonLookClick()
@@ -1041,6 +1142,95 @@ void PictureEditor::SlotPushButtonOrbClick()
 		//imshow("匹配窗口", resultImage);
 		if (char(waitKey(1)) == 27) break;
 	}
+}
+
+void PictureEditor::SlotPushButtonRepairClick()
+{
+	filename = QFileDialog::getOpenFileName(this, tr("open image"), "D:/pic", tr("image files(*.png *.jpg *.bmp *.jpeg)"));
+	if (filename.isEmpty())
+		return;
+	Mat srcImage2 = cv::imread(filename.toStdString());
+	Mat srcImage1 = srcImage.clone();
+	if (!srcImage1.data || !srcImage2.data)
+		return;
+	Mat grayImage1, grayImage2;
+	cvtColor(srcImage1, grayImage1, COLOR_BGR2GRAY);
+	cvtColor(srcImage2, grayImage2, COLOR_BGR2GRAY);
+
+	int minHessian = 300;
+	std::vector<KeyPoint> keypoint1, keypoint2;
+	Mat descriptors1, descriptors2;
+	Ptr<SURF> detector = SURF::create(minHessian);
+
+	detector->detectAndCompute(grayImage1, noArray(), keypoint1, descriptors1);
+	detector->detectAndCompute(grayImage2, noArray(), keypoint2, descriptors2);
+
+	Ptr<DescriptorMatcher> matcher = DescriptorMatcher::create(DescriptorMatcher::FLANNBASED);
+	std::vector<DMatch> matches;
+	matcher->match(descriptors1, descriptors2, matches);
+	double max_dist = 0; double min_dist = 100;
+
+	//快速计算关键点之间的最大和最小距离
+	for (int i = 0; i < descriptors1.rows; i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	//输出距离信息
+	qDebug() << ("> 最大距离（Max dist） : %f \n", max_dist);
+	qDebug() << ("> 最小距离（Min dist） : %f \n", min_dist);
+
+	//存下符合条件的匹配结果（即其距离小于2* min_dist的），使用radiusMatch同样可行
+	std::vector< DMatch > good_matches;
+	for (int i = 0; i < descriptors1.rows; i++)
+	{
+		if (matches[i].distance < 2 * min_dist)
+		{
+			good_matches.push_back(matches[i]);
+		}
+	}
+
+	// 绘制出符合条件的匹配点
+	Mat img_matches;
+	drawMatches(srcImage1, keypoint1, srcImage2, keypoint2,
+		good_matches, img_matches, Scalar::all(-1), Scalar::all(-1),
+		std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS);
+
+	// 输出相关匹配点信息
+	for (int i = 0; i < good_matches.size(); i++)
+	{
+		qDebug() << (">符合条件的匹配点 [%d] 特征点1: %d  -- 特征点2: %d  \n", i, good_matches[i].queryIdx, good_matches[i].trainIdx);
+	}
+
+	// 显示效果图
+
+
+	showImage2NewWidget(img_matches);
+
+	//定义两个局部变量
+	std::vector<Point2f> obj;
+	std::vector<Point2f> scene;
+
+	//从匹配成功的匹配对中获取关键点
+	for (unsigned int i = 0; i < good_matches.size(); i++)
+	{
+		obj.push_back(keypoint1[good_matches[i].queryIdx].pt);
+		scene.push_back(keypoint2[good_matches[i].trainIdx].pt);
+	}
+
+	Mat H = findHomography(scene, obj, RANSAC);//计算透视变换 
+	Mat resultImage;
+	Size s_;
+	s_.height = srcImage1.size[0] + srcImage2.size[0];
+	s_.width = srcImage1.size[1] + srcImage2.size[1];
+	warpPerspective(srcImage2, resultImage, H, s_);
+
+	Mat imageRoi = resultImage(Rect(0, 0, srcImage1.cols, srcImage1.rows));
+	addWeighted(imageRoi, 0.5, srcImage1, 0.5, 0.0, imageRoi);
+	//srcImage1.copyTo(imageRoi);
+	showImage2NewWidget(resultImage);
 }
 
 void PictureEditor::SlotSpinBox(int nThresh)

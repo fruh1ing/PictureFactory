@@ -53,6 +53,7 @@ private slots:
 	void SlotPushButtonSiftClick();
 	void SlotPushButtonLookClick();
 	void SlotPushButtonOrbClick();
+	void SlotPushButtonRepairClick();
 	void SlotSpinBox(int);
 
 
